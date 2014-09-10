@@ -1,0 +1,15 @@
+{
+	"version": "1.0",
+	"name": "True5050 Browserbot",
+	"description": "It's a thing",
+	"background": {
+		"scripts": ["background.js"],
+		"persistent": true
+	},
+	"permissions" : [
+		"webRequest",
+		"*://*/*",
+		"tabs"
+	],
+	"manifest_version": 2
+}
