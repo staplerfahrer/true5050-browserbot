@@ -102,23 +102,42 @@ var T5050urlHandler = (function () {
 		var tryAttempts = 40;
 		var resultsExpected = 2; // it's called 50/50 after all
 		var discoverTimeouts = [];
+
+		// create a series of timeouts
 		for (var i = 1; i < tryAttempts; i++) {
-			(function(tryCount) {
+			(function(tryCount) { // the closure preserves a context with tryCount for logging purposes
 				var to = setTimeout(function () {
+					// see if we have all the results
 					if (getT5050Results(t5050Url).length === resultsExpected) {
 						console.log('discoverT5050Results() found: ' + getT5050Results(t5050Url));
-						// cancel all timeouts
-						for (var cancel = 0; cancel < discoverTimeouts.length; cancel++) {
-							clearTimeout(discoverTimeouts[cancel]);
-						}
+						stopOpening(discoverTimeouts);
 						return; // We found them all, don't open any more tabs.
 					}
+
 					console.log('discoverT5050Results() attempt ' + tryCount);
-					createT5050Tab(windowId, t5050Url);
+
+					// check to see if we still have the window
+					chrome.windows.get(windowId, function (t5050Wnd) {
+						if (t5050Wnd !== undefined) {
+							// create a tab
+							createT5050Tab(windowId, t5050Url);
+						} else {
+							// the window has been closed, stop the timeouts
+							console.log('discoverT5050Results(): window ' + windowId + ' does not exist');
+							stopOpening(discoverTimeouts);
+						}
+					});
 				}, newTabInterval * i);
 				
 				discoverTimeouts.push(to);
 			})(i + 1);
+		}
+
+		// cancel all timeouts in the array
+		function stopOpening(timeouts) {
+			for (var cancel = 0; cancel < timeouts.length; cancel++) {
+				clearTimeout(timeouts[cancel]);
+			}
 		}
 	}
 
